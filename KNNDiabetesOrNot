@@ -1,0 +1,68 @@
+#KNN - Predict whether a person will have diabetes or not
+#Objective: Predict whether a person will be diagnosed with diabetes or not
+
+#import the required libraries as shown:
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.neighbors import kneighbors_graph
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import f1_score
+from sklearn.metrics import accuracy_score
+
+dataset = pd.read_csv('diabetes.csv')
+print( len(dataset) )
+print( dataset.head() )
+
+#Values of columns like "Glucose", "BloodPressure" cannot be accepted as zeroes
+#because it will affect the outcomes.
+#We can replace such values with the mean of the respective column.
+#Reject zeroes
+zero_not_accepted = ['Glucose' , 'BloodPressure' , 'SkinThickness' , 'Insulin' , 'BMI']
+for column in zero_not_accepted:
+    dataset[column] = dataset[column].replace(0 , np.NaN)
+    mean = int(dataset[column].mean(skipna = True))
+    dataset[column] = dataset[column].replace(np.NaN , mean)
+
+#Before proceeding further, let's split the dataset into train and test:
+#Split dataset
+x = dataset.iloc[: , 0:8]
+y = dataset.iloc[: , 8]
+x_train , x_test , y_train , y_test = train_test_split(x , y , random_state=0 , test_size=0.2)
+
+#Rule of thumb:
+#any algorithm that computes distance or assume normality, scale your features!
+
+#Feature Scaling:
+sc_x = StandardScaler()
+#Standardize features by removing the mean and scaling to unit variance.
+x_train = sc_x.fit_transform(x_train)
+x_test = sc_x.transform(x_test)#Perform standardization by centering and scaling.
+
+#Then define the model using KNeigbors Classifier and fit the traindata in the model
+#Define the model : Init K-NN
+from sklearn.neighbors import KNeighborsClassifier
+
+import math
+math.sqrt(len(y_test))
+
+classifier = KNeighborsClassifier(n_neighbors=11 , p=2 , metric='euclidean')
+#n_neighbors here is K
+#p is the power parameter to define the metric used, which is "Euclidean" in our case
+#p=2 because what we're looking for is if it is the diabetic or not
+#Metric to use for distance computation. Default is “minkowski”, which results in the standard Euclidean distance when p = 2.
+
+#Fit Model
+classifier.fit(x_train , y_train)
+
+#Predict the test set results:
+y_pred = classifier.predict(x_test)
+y_pred
+
+#It's important to evaluate the model, let's use confusion matrix to do that:
+#Evaluate Model
+cm = confusion_matrix (y_test , y_pred)
+print(cm)
+print(f1_score(y_test,y_pred))
+print(accuracy_score(y_test , y_pred))
